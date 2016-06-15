@@ -11,6 +11,10 @@ from app.model import Base, User
 # TODO: Figure out flask versioning.
 # TODO: Figure out pytest for testing flask and database
 # TODO: Figure out session logic for database
+# TODO: CompareText get list, get single, post and delete
+# TODO: User get list, get single, post and delete
+# TODO: TwoWayDiff get list, get single, post and delete
+# TODO: Look at using Flask-Restless for rest resource classes
 
 basedir = os.path.realpath(os.path.dirname(__file__))
 databasedir = os.path.join(basedir, "db", "diffly.db")
