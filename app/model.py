@@ -2,6 +2,9 @@ import hashlib
 import hmac
 import json
 from random import SystemRandom
+
+import binascii
+from itsdangerous import TimedJSONWebSignatureSerializer, SignatureExpired, BadSignature
 from sqlalchemy import Column, Integer, String, ForeignKey, LargeBinary
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.ext.hybrid import hybrid_property
@@ -10,9 +13,17 @@ from sqlalchemy.orm import relationship
 Base = declarative_base()
 
 
+def init_db(engine):
+    Base.metadata.drop_all(bind=engine)
+    Base.metadata.create_all(bind=engine)
+
 # TODO: Would prefer to use GUIDs for keys in all tables. Stop collisions across instances, also stop information leak
 # TODO: Validate user email with validate_email
 # TODO: Need to link users into text and comparisons for basic security.
+
+def binify(x):
+    h = hex(x)[2:].rstrip('L')
+    return binascii.unhexlify('0'*(32-len(h))+h)
 
 
 class Users(Base):
@@ -23,8 +34,8 @@ class Users(Base):
     id = Column(Integer, primary_key=True)
     name = Column(String(250))
     email = Column(String(250), unique=True)
-    _password = Column(LargeBinary(120))
-    _salt = Column(String(120))
+    _password = Column(LargeBinary(128))
+    _salt = Column(String(128))
 
     @hybrid_property
     def password(self):
@@ -34,7 +45,7 @@ class Users(Base):
     def password(self, value):
         # When a user is first created, give them a salt
         if self._salt is None:
-            self._salt = bytes(SystemRandom().getrandbits(128))
+            self._salt = binify(SystemRandom().getrandbits(128))
         self._password = self._hash_password(value)
 
     def is_valid_password(self, password):
@@ -47,15 +58,40 @@ class Users(Base):
         buff = hashlib.pbkdf2_hmac("sha512", pwd, salt, iterations=100000)
         return bytes(buff)
 
-    def __repr__(self):
-        return "<User #{:d}>".format(self.id)
+    # def verify_password(self, password):
+    #     return pwd_context.verify(password, self.password_hash)
+
+    def generate_auth_token(self, expiration=600):
+        from app.diffly import app
+        s = TimedJSONWebSignatureSerializer(app.config['SECRET_KEY'], expires_in=expiration)
+        return s.dumps({'id': self.id})
+
+    # def __repr__(self):
+    #    return "<User #{:d}>".format(self.id)
 
     def as_dict(self):
-        return {c.name: getattr(self, c.name) for c in self.__table__.columns}
+        user_dict = {c.name: getattr(self, c.name) for c in self.__table__.columns}
+        user_dict.pop('_password')
+        user_dict.pop('_salt')
+        return user_dict
 
     def to_json(self):
         return json.dumps(self, default=lambda o: o.__dict__,
                           sort_keys=True, indent=4)
+
+    @staticmethod
+    def verify_auth_token(token, session):
+        from app.diffly import app
+        s = TimedJSONWebSignatureSerializer(app.config['SECRET_KEY'], expires_in=600)
+        try:
+            data = s.loads(token)
+        except SignatureExpired:
+            return None    # valid token, but expired
+        except BadSignature:
+            return None    # invalid token
+        user = session.query(Users).filter(Users.id == data['id']).count() > 0
+        # user = session. Users.query.get(data['id'])
+        return user
 
 
 class ComparisonTexts(Base):

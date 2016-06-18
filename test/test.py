@@ -33,6 +33,7 @@ def client(request):
 
 
 def assert_is_json_content(rv, status_code):
+    __tracebackhide__ = True
     assert rv.content_type == 'application/json'
     assert rv.status_code == status_code
 
@@ -58,3 +59,10 @@ def test_post_user_returns_new_user(client):
     json_response = json.loads(rv.get_data())
     assert json_response['users']['name'] == 'joe'
     assert json_response['users']['email'] == 'joe@joes.com'
+
+
+
+# ComparisonTexts
+# TextLine
+# TwoWayDiffs
+# DiffOpCodes
