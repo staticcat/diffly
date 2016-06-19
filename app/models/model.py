@@ -1,9 +1,8 @@
 import hashlib
 import hmac
 import json
-from random import SystemRandom
+import os
 
-import binascii
 from itsdangerous import TimedJSONWebSignatureSerializer, SignatureExpired, BadSignature
 from sqlalchemy import Column, Integer, String, ForeignKey, LargeBinary
 from sqlalchemy.ext.declarative import declarative_base
@@ -20,10 +19,6 @@ def init_db(engine):
 # TODO: Would prefer to use GUIDs for keys in all tables. Stop collisions across instances, also stop information leak
 # TODO: Validate user email with validate_email
 # TODO: Need to link users into text and comparisons for basic security.
-
-def binify(x):
-    h = hex(x)[2:].rstrip('L')
-    return binascii.unhexlify('0'*(32-len(h))+h)
 
 
 class Users(Base):
@@ -45,7 +40,7 @@ class Users(Base):
     def password(self, value):
         # When a user is first created, give them a salt
         if self._salt is None:
-            self._salt = binify(SystemRandom().getrandbits(128))
+            self._salt = os.urandom(128)
         self._password = self._hash_password(value)
 
     def is_valid_password(self, password):

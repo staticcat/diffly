@@ -7,11 +7,12 @@
     :license: BSD, see LICENSE for more details.
 """
 
-import pytest
 import os
 import tempfile
-from flask import json
+
+import pytest
 from app.diffly import app, init_db
+from flask import json
 
 
 @pytest.fixture
@@ -21,7 +22,7 @@ def client(request):
     test_client = app.test_client()
 
     with app.app_context():
-        init_db()
+        init_db(engine=None)
 
     def teardown():
         os.close(db_fd)
@@ -33,16 +34,19 @@ def client(request):
 
 
 def assert_is_json_content(rv, status_code):
+    # noinspection PyUnusedLocal
     __tracebackhide__ = True
     assert rv.content_type == 'application/json'
     assert rv.status_code == status_code
 
 
+# noinspection PyShadowingNames
 def test_root_route_returns_404(client):
     rv = client.get('/')
     assert rv.status_code == 404
 
 
+# noinspection PyShadowingNames
 def test_empty_db_returns_no_users(client):
     """Views handle zero users in the database"""
     rv = client.get('/users/')
@@ -52,6 +56,7 @@ def test_empty_db_returns_no_users(client):
     assert json_response['users'] == []
 
 
+# noinspection PyShadowingNames
 def test_post_user_returns_new_user(client):
     rv = client.post('/users/',
                      data={'name': 'joe', 'email': 'joe@joes.com'})
@@ -59,8 +64,6 @@ def test_post_user_returns_new_user(client):
     json_response = json.loads(rv.get_data())
     assert json_response['users']['name'] == 'joe'
     assert json_response['users']['email'] == 'joe@joes.com'
-
-
 
 # ComparisonTexts
 # TextLine
