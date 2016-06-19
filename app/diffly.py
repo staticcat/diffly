@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
-from flask_httpauth import HTTPTokenAuth
-from flask_restful import Api
 
+from flask_restful import Api
 from app.consts import database_dir
 from app.factory import create_app
 from app.models.session import session, engine
@@ -29,7 +28,6 @@ from app.routes import routes
 
 app = create_app(None)
 api = Api(app, catch_all_404s=True)
-auth = HTTPTokenAuth(scheme='Token')
 
 app.config.update(dict(
     DATABASE=database_dir,
@@ -40,7 +38,6 @@ app.config.update(dict(
 ))
 # app.config.from_envvar('DIFFLY_SETTINGS', silent=True)
 app.config['TRAP_HTTP_EXCEPTIONS'] = True
-
 
 session.init_app(app=app)
 

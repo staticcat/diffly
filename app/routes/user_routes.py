@@ -2,6 +2,7 @@ from flask_restful import Resource, abort,  reqparse
 
 from app.models.model import Users
 from app.models.session import session
+from rest_auth import auth
 
 
 def val_user_name(value, name):
@@ -34,6 +35,7 @@ class UsersMultipleRoute(Resource):
         super().__init__()
 
     @staticmethod
+    @auth.login_required
     def get():
         """
 
