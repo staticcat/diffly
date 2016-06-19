@@ -1,7 +1,6 @@
 from flask_restful import Resource, abort,  reqparse
-
-from app.models.model import Users
-from app.models.session import session
+from app import db
+from model import Users
 from rest_auth import auth
 
 
@@ -41,18 +40,18 @@ class UsersMultipleRoute(Resource):
 
         :rtype:
         """
-        users = session.query(Users).all()
+        users = db.session.query(Users).all()
         return {'users': users}
 
     @staticmethod
     def post():
         args = user_parser.parse_args()
-        users_name_taken = session.query(Users).filter(Users.name == args['name']).count() > 0
+        users_name_taken = db.session.query(Users).filter(Users.name == args['name']).count() > 0
         if users_name_taken:
             abort_user_name_already_exists(args['name'])
         new_user = Users(name=args['name'], email=args['email'], password=args['password'])
-        session.add(new_user)
-        session.commit()
+        db.session.add(new_user)
+        db.session.commit()
         return {'users': new_user.as_dict()}, 201
 
 
@@ -66,7 +65,7 @@ class UsersSingleRoute(Resource):
 
         :rtype:
         """
-        users = session.query(Users).filter(Users.id == user_id).one_or_none()
+        users = db.session.query(Users).filter(Users.id == user_id).one_or_none()
         if not users:
             abort_user_doesnt_exist(user_id)
         return {'users': users.as_dict()}

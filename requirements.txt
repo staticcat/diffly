@@ -1,4 +1,7 @@
 pytest
 sqlalchemy
 flask
-flask_sqlalchemy_session
+flask_sqlalchemy
+flask_restful
+flask_httpauth
+itsdangerous

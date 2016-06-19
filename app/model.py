@@ -2,35 +2,25 @@ import hashlib
 import hmac
 import json
 import os
-
 from itsdangerous import TimedJSONWebSignatureSerializer, SignatureExpired, BadSignature
-from sqlalchemy import Column, Integer, String, ForeignKey, LargeBinary
-from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.ext.hybrid import hybrid_property
-from sqlalchemy.orm import relationship
-
-Base = declarative_base()
-
-
-def init_db(engine):
-    Base.metadata.drop_all(bind=engine)
-    Base.metadata.create_all(bind=engine)
+from app import db
 
 # TODO: Would prefer to use GUIDs for keys in all tables. Stop collisions across instances, also stop information leak
 # TODO: Validate user email with validate_email
 # TODO: Need to link users into text and comparisons for basic security.
 
 
-class Users(Base):
+class Users(db.Model):
     """Represents a user of the system. The user is linked to objects that they own and can view.
     """
     __tablename__ = 'users'
 
-    id = Column(Integer, primary_key=True)
-    name = Column(String(250))
-    email = Column(String(250), unique=True)
-    _password = Column(LargeBinary(128))
-    _salt = Column(String(128))
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(250))
+    email = db.Column(db.String(250), unique=True)
+    _password = db.Column(db.LargeBinary(128))
+    _salt = db.Column(db.String(128))
 
     @hybrid_property
     def password(self):
@@ -57,7 +47,7 @@ class Users(Base):
     #     return pwd_context.verify(password, self.password_hash)
 
     def generate_auth_token(self, expiration=600):
-        from app.diffly import app
+        from app import app
         s = TimedJSONWebSignatureSerializer(app.config['SECRET_KEY'], expires_in=expiration)
         return s.dumps({'id': self.id})
 
@@ -76,74 +66,76 @@ class Users(Base):
 
     @staticmethod
     def verify_auth_token(token, session):
-        from app.diffly import app
+        from app import app
         s = TimedJSONWebSignatureSerializer(app.config['SECRET_KEY'], expires_in=600)
         try:
             data = s.loads(token)
+        # valid token, but expired
         except SignatureExpired:
-            return None    # valid token, but expired
+            return None
+        # invalid token
         except BadSignature:
-            return None    # invalid token
-        user = session.query(Users).filter(Users.id == data['id']).count() > 0
+            return None
+        user = session.query(Users).filter_by(Users.id == data['id']).count() > 0
         # user = session. Users.query.get(data['id'])
         return user
 
 
-class ComparisonTexts(Base):
+class ComparisonTexts(db.Model):
     """Text to compare is represented as a list of lines. This allows more fine grained control over number of
     lines returned.
     """
     __tablename__ = 'texts'
 
-    id = Column(Integer, primary_key=True)
-    name = Column(String(250), nullable=False)
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(250), nullable=False)
 
     def as_dict(self):
         return {c.name: getattr(self, c.name) for c in self.__table__.columns}
 
 
-class TextLine(Base):
+class TextLine(db.Model):
     """Lines that are compared. These belong to a text to compare.
     """
     __tablename__ = 'text_lines'
 
-    id = Column(Integer, primary_key=True)
-    line = Column(String(250))
-    line_no = Column(Integer)
-    text_to_compare_id = Column(Integer, ForeignKey('texts.id'))
-    text_to_compare = relationship(ComparisonTexts)
+    id = db.Column(db.Integer, primary_key=True)
+    line = db.Column(db.String(250))
+    line_no = db.Column(db.Integer)
+    text_to_compare_id = db.Column(db.Integer, db.ForeignKey('texts.id'))
+    text_to_compare = db.relationship(ComparisonTexts)
 
     def as_dict(self):
         return {c.name: getattr(self, c.name) for c in self.__table__.columns}
 
 
-class TwoWayDiffs(Base):
+class TwoWayDiffs(db.Model):
     """A representation of the difference check performed on two pieces of text.
     """
     __tablename__ = 'two_way_diffs'
 
-    id = Column(Integer, primary_key=True)
-    left_text_id = Column(Integer, ForeignKey('texts.id'))
-    right_text_id = Column(Integer, ForeignKey('texts.id'))
-    left_text = relationship(ComparisonTexts, foreign_keys=[left_text_id])
-    right_text = relationship(ComparisonTexts, foreign_keys=[right_text_id])
+    id = db.Column(db.Integer, primary_key=True)
+    left_text_id = db.Column(db.Integer, db.ForeignKey('texts.id'))
+    right_text_id = db.Column(db.Integer, db.ForeignKey('texts.id'))
+    left_text = db.relationship(ComparisonTexts, foreign_keys=[left_text_id])
+    right_text = db.relationship(ComparisonTexts, foreign_keys=[right_text_id])
 
     def as_dict(self):
         return {c.name: getattr(self, c.name) for c in self.__table__.columns}
 
 
-class DiffOpCodes(Base):
+class DiffOpCodes(db.Model):
     """The operation codes to perform to get the left text looking like the right.
     """
     __tablename__ = 'diff_op_codes'
 
-    id = Column(Integer, primary_key=True)
-    line_no = Column(Integer)
-    op_code_tag = Column(String(6))
-    left_text_start = Column(Integer)
-    left_text_end = Column(Integer)
-    right_text_start = Column(Integer)
-    right_text_end = Column(Integer)
+    id = db.Column(db.Integer, primary_key=True)
+    line_no = db.Column(db.Integer)
+    op_code_tag = db.Column(db.String(6))
+    left_text_start = db.Column(db.Integer)
+    left_text_end = db.Column(db.Integer)
+    right_text_start = db.Column(db.Integer)
+    right_text_end = db.Column(db.Integer)
 
     def as_dict(self):
         return {c.name: getattr(self, c.name) for c in self.__table__.columns}
