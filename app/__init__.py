@@ -36,7 +36,7 @@ app.config['TRAP_HTTP_EXCEPTIONS'] = True
 db = SQLAlchemy(app)
 api = Api(app, catch_all_404s=True)
 
-from app import routes
+from app.routes import routes
 
 # TODO: Remove when database migrations are in place.
 db.drop_all()
