@@ -27,7 +27,7 @@ app = create_app(__name__, 'config')
 app.config['TRAP_HTTP_EXCEPTIONS'] = True
 
 db = SQLAlchemy(app)
-api = Api(app, catch_all_404s=True)
+api = Api(app, prefix='/v1', catch_all_404s=True)
 
 from app.routes import routes
 

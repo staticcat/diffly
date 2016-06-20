@@ -1,15 +1,15 @@
 User - create user:
-curl -H "Content-Type: application/json" -X POST -d '{"name":"John", "email":"something@abc.net", "password":"bert"}' 127.0.0.1:5000/users/ -i
+curl -H "Content-Type: application/json" -X POST -d '{"name":"John", "email":"something@abc.net", "password":"bert"}' 127.0.0.1:5000/v1/users/ -i
 
 User - create user fails password required:
-curl -H "Content-Type: application/json" -X POST -d '{"name":"John", "email":"something@abc.net"}' 127.0.0.1:5000/users/ -i
+curl -H "Content-Type: application/json" -X POST -d '{"name":"John", "email":"something@abc.net"}' 127.0.0.1:5000/v1/users/ -i
 User - create user fails email required:
-curl -H "Content-Type: application/json" -X POST -d '{"name":"John", "password":"bert"}' 127.0.0.1:5000/users/ -i
+curl -H "Content-Type: application/json" -X POST -d '{"name":"John", "password":"bert"}' 127.0.0.1:5000/v1/users/ -i
 User - create user fails name required:
-curl -H "Content-Type: application/json" -X POST -d '{"email":"something@abc.net", "password":"bert"}' 127.0.0.1:5000/users/ -i
+curl -H "Content-Type: application/json" -X POST -d '{"email":"something@abc.net", "password":"bert"}' 127.0.0.1:5000/v1/users/ -i
 
 User - update user:
-curl -H "Content-Type: application/json" -X PUT -d '{"name":"Jon", "email":"anything@abc.net", "password":"bert"}' 127.0.0.1:5000/users/1/ -i
+curl -H "Content-Type: application/json" -X PUT -d '{"name":"Jon", "email":"anything@abc.net", "password":"bert"}' 127.0.0.1:5000/v1/users/1/ -i
 
 
 404 on root:
