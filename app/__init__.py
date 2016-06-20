@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
-
 from flask_restful import Api
 from flask_sqlalchemy import SQLAlchemy
-
 from app.factory import create_app
 
 # TODO: __LONG TERM__
+# TODO: Implement unit testing. Would have started with unit testing, however haven't worked out how to mock Flask app,
+# TODO:   db and sessions all in one go.
 # TODO: Implement database migration with alembic
 
 # TODO: __SHORT TERM__
@@ -23,14 +23,7 @@ from app.factory import create_app
 # TODO: 404 not found - not found anything matching the Request-URI.
 # TODO: 500 internal server error -
 
-
-# def recreate_db(db):
-#     db.drop_all()
-#     db.create_all()
-
-
 app = create_app(__name__, 'config')
-# app.config.from_envvar('DIFFLY_SETTINGS', silent=True)
 app.config['TRAP_HTTP_EXCEPTIONS'] = True
 
 db = SQLAlchemy(app)

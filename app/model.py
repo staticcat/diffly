@@ -3,6 +3,7 @@ import hmac
 import json
 import os
 from itsdangerous import TimedJSONWebSignatureSerializer, SignatureExpired, BadSignature
+from sqlalchemy import and_
 from sqlalchemy.ext.hybrid import hybrid_property
 from app import db
 
@@ -79,6 +80,22 @@ class Users(db.Model):
         user = session.query(Users).filter_by(Users.id == data['id']).count() > 0
         # user = session. Users.query.get(data['id'])
         return user
+
+    @staticmethod
+    def email_is_unique(user_email, ignore_id):
+        if not ignore_id:
+            unique_filter = Users.email == user_email
+        else:
+            unique_filter = and_(Users.email == user_email, Users.id != ignore_id)
+        return db.session.query(Users).filter(unique_filter).count() == 0
+
+    @staticmethod
+    def name_is_unique(user_name, ignore_id):
+        if not ignore_id:
+            unique_filter = Users.name == user_name
+        else:
+            unique_filter = and_(Users.name == user_name, Users.id != ignore_id)
+        return db.session.query(Users).filter(unique_filter).count() == 0
 
 
 class ComparisonTexts(db.Model):
