@@ -2,7 +2,7 @@
 
 from flask_restful import Api
 from flask_sqlalchemy import SQLAlchemy
-from app.consts import database_dir
+
 from app.factory import create_app
 
 # TODO: __LONG TERM__
@@ -28,29 +28,19 @@ from app.factory import create_app
 #     db.drop_all()
 #     db.create_all()
 
-DATABASE_URI = 'sqlite:///' + database_dir
 
-app = create_app(__name__, None)
-app.config.update(dict(
-    DATABASE=DATABASE_URI,
-    SQLALCHEMY_DATABASE_URI=DATABASE_URI,
-    DEBUG=True,
-    SECRET_KEY='development key',
-    USERNAME='admin',
-    PASSWORD='default',
-    SQLALCHEMY_TRACK_MODIFICATIONS=False
-))
+app = create_app(__name__, 'config')
 # app.config.from_envvar('DIFFLY_SETTINGS', silent=True)
 app.config['TRAP_HTTP_EXCEPTIONS'] = True
 
 db = SQLAlchemy(app)
 api = Api(app, catch_all_404s=True)
 
+from app import routes
+
 # TODO: Remove when database migrations are in place.
 db.drop_all()
 db.create_all()
-
-import routes
 
 routes.map_login_route(api)
 routes.map_user_routes(api)

@@ -103,7 +103,7 @@ class TextLine(db.Model):
     line = db.Column(db.String(250))
     line_no = db.Column(db.Integer)
     text_to_compare_id = db.Column(db.Integer, db.ForeignKey('texts.id'))
-    text_to_compare = db.relationship(ComparisonTexts)
+    text_to_compare = db.relationship(ComparisonTexts, foreign_keys=[text_to_compare_id])
 
     def as_dict(self):
         return {c.name: getattr(self, c.name) for c in self.__table__.columns}
